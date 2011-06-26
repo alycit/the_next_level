@@ -18,27 +18,25 @@ helpers do
   end
 
   def extract_movie row
-    movie = Hash.new
     cells = row.xpath('td')
-
-    movie["rank"] = cells[0].text
-    movie["previous_rank"] = cells[1].text
-    movie["tomato_meter_score"] = cells[2].xpath('span/span[@class="tMeterScore"]').text
-    movie["name"] = cells[3].xpath('a').text
-    movie["weeks_released"] = cells[4].text
-    movie["weekend_gross"] = cells[5].text
-    movie["total_gross"] = cells[6].text
-    movie["theater_average"] = cells[7].text
-    movie["number_of_theaters"] = cells[8].text
-
-    movie
+    
+    movie = {
+      :rank => cells[0].text,
+      :previous_rank => cells[1].text,
+      :tomato_meter_score => cells[2].xpath('span/span[@class="tMeterScore"]').text,
+      :name => cells[3].xpath('a').text,
+      :weeks_released => cells[4].text,
+      :weekend_gross => cells[5].text,
+      :total_gross => cells[6].text,
+      :theater_average => cells[7].text,
+      :number_of_theaters => cells[8].text
+    }
   end
 
   def convert_format data, format
     case format
     when "xml"
-      data_hash = Hash.new
-      data_hash["movie"] = data
+      data_hash = { :movie => data }
       content_type :xml
       XmlSimple.xml_out data_hash, {"RootName" => "movies", "NoAttr" => true}
     else
