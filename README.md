@@ -43,7 +43,7 @@ This scraper reads the top 50 movies as provided by the rottentomatoes.com box o
 	</movies>
 
 
-# Error Handling
+## Error Handling
 
 Basic error handling is provided and provides a 404 to the user with the appropriate message for either an individual movie out of range or invalid url.  
 
