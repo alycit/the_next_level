@@ -4,34 +4,13 @@ require 'open-uri'
 require 'nokogiri'
 require 'json'
 require 'xmlsimple'
+require './movie_processor'
 
 SITE_URL = "http://www.rottentomatoes.com/movie/box_office.php"
 CONTENT_LOCATION = '//table[@class="center rt_table"]/tbody/tr'
 
-helpers do 
-  def process_movies rows
-    movie_array = Array.new
-    rows.each do |row|
-      movie_array << extract_movie(row)
-    end
-    movie_array
-  end
+helpers do
 
-  def extract_movie row
-    cells = row.xpath('td')
-    
-    movie = {
-      :rank => cells[0].text,
-      :previous_rank => cells[1].text,
-      :tomato_meter_score => cells[2].xpath('span/span[@class="tMeterScore"]').text,
-      :name => cells[3].xpath('a').text,
-      :weeks_released => cells[4].text,
-      :weekend_gross => cells[5].text,
-      :total_gross => cells[6].text,
-      :theater_average => cells[7].text,
-      :number_of_theaters => cells[8].text
-    }
-  end
 
   def convert_format data, format
     case format
@@ -46,9 +25,10 @@ helpers do
   end
 end
 
+
 get '/top_movies.:format' do
   doc = Nokogiri::HTML(open(SITE_URL))
-  movies = process_movies doc.xpath(CONTENT_LOCATION)
+  movies = MovieProcessor.process_movies doc.xpath(CONTENT_LOCATION)
   convert_format movies, params[:format]
 end
 
@@ -62,11 +42,11 @@ get '/top_movies/:id.:format' do
   end
 
   doc = Nokogiri::HTML(open(SITE_URL))
-  movie = extract_movie doc.xpath(CONTENT_LOCATION)[movie_id - 1]
+  movie = MovieProcessor.extract_movie doc.xpath(CONTENT_LOCATION)[movie_id - 1]
   convert_format movie, params[:format]
 end
 
-not_found do 
+not_found do
   status(404)
   @msg || "I know not what you seek"
 end
