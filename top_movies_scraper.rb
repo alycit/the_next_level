@@ -11,10 +11,14 @@ CONTENT_LOCATION = '//table[@class="center rt_table"]/tbody/tr'
 
 helpers do
 
+  def movie_rows
+    weeks_ago = params[:weeks_ago].to_i
+    doc = Nokogiri::HTML(open("#{SITE_URL}?rank_id=#{weeks_ago}&country=us"))
+    doc.xpath(CONTENT_LOCATION)
+  end
 
-  def convert_format data, format
-    case format
-    when "xml"
+  def convert_format data
+    if params[:format] == 'xml'
       data_hash = { :movie => data }
       content_type :xml
       XmlSimple.xml_out data_hash, {"RootName" => "movies", "NoAttr" => true}
@@ -27,23 +31,21 @@ end
 
 
 get '/top_movies.:format' do
-  doc = Nokogiri::HTML(open(SITE_URL))
-  movies = MovieProcessor.process_movies doc.xpath(CONTENT_LOCATION)
-  convert_format movies, params[:format]
+  movies = MovieProcessor.process_movies movie_rows
+  convert_format movies
 end
 
 get '/top_movies/:id.:format' do
   movie_id = params[:id].to_i
+  return oops("This service only provides box office data for the top 50 movies") if( movie_id < 1 && movie_id > 50)
 
-  if !(1..50).include?(movie_id)
-    status(404)
-    @msg = "This service only provides box office data for the top 50 movies"
-    return
-  end
+  movie = MovieProcessor.extract_movie movie_rows[movie_id - 1]
+  convert_format movie
+end
 
-  doc = Nokogiri::HTML(open(SITE_URL))
-  movie = MovieProcessor.extract_movie doc.xpath(CONTENT_LOCATION)[movie_id - 1]
-  convert_format movie, params[:format]
+def oops(msg)
+  @msg = msg
+  status(404)
 end
 
 not_found do
